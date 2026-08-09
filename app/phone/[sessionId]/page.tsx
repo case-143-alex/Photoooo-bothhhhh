@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { getSocket } from "@/lib/socket";
 import { playSound } from "@/lib/audio";
 
-type PhoneStatus = "joining" | "waiting" | "shooting" | "done" | "error";
+type PhoneStatus = "joining" | "waiting" | "shooting" | "done" | "error" | "ended";
 
 export default function PhonePage() {
   const params = useParams();
@@ -48,6 +48,10 @@ export default function PhonePage() {
       setActiveTab("camera");
     });
 
+    socket.on("session:ended", () => {
+      setStatus("ended");
+    });
+
     socket.on("error", () => setStatus("error"));
 
     return () => {
@@ -56,6 +60,7 @@ export default function PhonePage() {
       socket.off("session:photo-received");
       socket.off("session:done");
       socket.off("session:reset");
+      socket.off("session:ended");
       socket.off("error");
     };
   }, [sessionId]);
@@ -77,6 +82,20 @@ export default function PhonePage() {
           <div className="text-5xl mb-4">😕</div>
           <h2 className="text-xl font-bold mb-2">Sessão não encontrada</h2>
           <p style={{ color: "var(--muted)" }}>Pede ao staff para gerar um novo QR Code</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (status === "ended") {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <div className="text-center">
+          <div className="text-5xl mb-4">✅</div>
+          <h2 className="text-xl font-bold mb-2">Sessão terminada</h2>
+          <p style={{ color: "var(--muted)" }}>
+            O staff iniciou uma nova sessão no Booth. Se as tuas fotos já foram descarregadas, podes fechar esta página.
+          </p>
         </div>
       </div>
     );
